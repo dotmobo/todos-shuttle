@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO App</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.4.0/css/pico.min.css">
+    <script src="https://unpkg.com/alpinejs" defer></script>
+</head>
+<body>
+    <header class="container">
+        <nav>
+            <ul>
+                <li><strong>TODO App</strong></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container" x-data="todoApp()">
+        <h1>TODO App</h1>
+
+        <form @submit.prevent="addTodo">
+            <input type="text" x-model="newTodo" placeholder="Add a new todo" required>
+            <button type="submit">Add</button>
+        </form>
+
+        <ul>
+            <template x-for="todo in todos" :key="todo.id">
+                <li>
+                    <span x-text="todo.note"></span>
+                    <button @click="removeTodo(todo.id)" class="secondary">Delete</button>
+                </li>
+            </template>
+        </ul>
+    </main>
+
+    <footer class="container">
+        <small>&copy; 2024 TODO App</small>
+    </footer>
+
+    <script>
+        function todoApp() {
+            return {
+                todos: [],
+                newTodo: '',
+
+                async fetchTodos() {
+                    const response = await fetch('/todos');
+                    this.todos = await response.json();
+                },
+
+                async addTodo() {
+                    const response = await fetch('/todos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ note: this.newTodo })
+                    });
+                    const todo = await response.json();
+                    this.todos.push(todo);
+                    this.newTodo = '';
+                },
+
+                async removeTodo(id) {
+                    await fetch(`/todos/${id}`, {
+                        method: 'DELETE'
+                    });
+                    this.todos = this.todos.filter(todo => todo.id !== id);
+                },
+
+                async init() {
+                    await this.fetchTodos();
+                }
+            };
+        }
+    </script>
+</body>
+</html>
